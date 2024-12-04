@@ -1,0 +1,68 @@
+alias: Kodi Movie Lights Control
+description: Controls lights based on Kodi playback state
+triggers:
+  - entity_id: media_player.192_168_1_81
+    to: playing
+    trigger: state
+  - entity_id: media_player.192_168_1_81
+    to: paused
+    trigger: state
+  - entity_id: media_player.192_168_1_81
+    to: idle
+    trigger: state
+  - entity_id: media_player.192_168_1_81
+    to: "off"
+    trigger: state
+actions:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: media_player.192_168_1_81
+            state: playing
+        sequence:
+          - data:
+              scene_id: pre_movie_state`
+              snapshot_entities:
+                - light.dining
+            action: scene.create
+          - target:
+              entity_id: light.dining
+            data:
+              brightness_pct: 35
+              transition: 3
+            action: light.turn_on
+      - conditions:
+          - condition: state
+            entity_id: media_player.192_168_1_81
+            state: paused
+        sequence:
+          - target:
+              entity_id: light.dining
+            data:
+              brightness_pct: 75
+              transition: 2
+            action: light.turn_on
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: media_player.192_168_1_81
+                state: idle
+              - condition: state
+                entity_id: media_player.192_168_1_81
+                state: "off"
+        sequence:
+          - target:
+              entity_id: scene.pre_movie_state
+            data:
+              transition: 2
+            action: scene.turn_on
+          - delay:
+              seconds: 2
+          - target:
+              entity_id: light.dining
+            data:
+              brightness_pct: 100
+              transition: 2
+            enabled: "{{ not is_state('light.dining', 'on') }}"
+            action: light.turn_on
