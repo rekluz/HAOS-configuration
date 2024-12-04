@@ -1,0 +1,58 @@
+alias: FireStick Movie Mode
+description: >-
+  Dim lights when movie starts and restore to full brightness when
+  paused/stopped
+triggers:
+  - entity_id: media_player.fire_tv_192_168_1_81
+    to: playing
+    trigger: state
+  - entity_id: media_player.fire_tv_192_168_1_81
+    to: paused
+    trigger: state
+  - entity_id: media_player.fire_tv_192_168_1_81
+    to: idle
+    trigger: state
+  - entity_id: media_player.fire_tv_192_168_1_81
+    to: standby
+    trigger: state
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state == 'playing' }}"
+          - condition: template
+            value_template: "{{ current_app in movie_apps }}"
+          - condition: time
+            after: "18:00:00"
+            before: "07:00:00"
+        sequence:
+          - target:
+              area_id: light.dining
+            data:
+              brightness_pct: 30
+              transition: 3
+            action: light.turn_on
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.to_state.state in ['paused', 'idle', 'standby'] }}"
+          - condition: template
+            value_template: "{{ current_app in movie_apps }}"
+        sequence:
+          - target:
+              area_id: light.dining
+            data:
+              brightness_pct: 100
+              transition: 3
+            action: light.turn_on
+variables:
+  current_app: "{{ state_attr('media_player.192_168_1_81', 'app_id') }}"
+  movie_apps: |
+    {{ [
+      'com.amazon.firetv.youtube.tv',
+      'com.amazon.amazonvideo.livingroom',
+      'com.netflix.ninja',
+      'com.disney.disneyplus',
+      'com.hbo.hbonow',
+      'com.plexapp.android',
+      'com.apple.atve.amazon.appletv'
+    ] }}
