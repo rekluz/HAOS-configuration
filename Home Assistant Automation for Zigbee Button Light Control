@@ -1,0 +1,31 @@
+# Home Assistant Automation for Zigbee Button Light Control
+automation:
+  - id: zigbee_button_light_control
+    alias: "Zigbee Button Light Dimming"
+    trigger:
+      - platform: event
+        event_type: zha_event
+        event_data:
+          device_id: 05a61c3384766cdffebb459a3a6dfb20
+    condition: []
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.command == 'remote_button_short_press' }}"
+            sequence:
+              - service: light.turn_on
+                target:
+                  entity_id: light.dining
+                data:
+                  brightness_pct: 30
+          
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.event.data.command == 'remote_button_long_press' }}"
+            sequence:
+              - service: light.turn_on
+                target:
+                  entity_id: light.dining
+                data:
+                  brightness_pct: 100
