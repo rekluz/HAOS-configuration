@@ -1,0 +1,16 @@
+alias: "Bed pad sensor basement 2 "
+description: ""
+mode: single
+triggers:
+  - type: not_opened
+    device_id: 285cedb2c37a261156526f3b9f2593cb
+    entity_id: 24fc3ec851df8ac64e6978ed3472ca82
+    domain: binary_sensor
+    trigger: device
+conditions: []
+actions:
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      area_id: basement
