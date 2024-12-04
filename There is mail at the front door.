@@ -1,0 +1,18 @@
+alias: There is mail at the front door
+description: ""
+triggers:
+  - type: motion
+    device_id: c2911f357d20334359b1b36440d095b6
+    entity_id: 4d264bd8aecf6debfa89d5cdf2762a79
+    domain: binary_sensor
+    trigger: device
+conditions: []
+actions:
+  - action: notify.alexa_media_rico_s_echo_show_5
+    metadata: {}
+    data:
+      message: There is mail at the front door.
+  - action: notify.mobile_app_sm_g991w
+    data:
+      message: Mail has arrived
+mode: single
