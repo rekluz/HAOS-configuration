@@ -1,0 +1,114 @@
+alias: Basement motion sensor with wall switch override
+description: Motion sensor automation with regular wall switch override for basement lights
+triggers:
+  - entity_id: binary_sensor.b_slave_tz3000_ts0202_motion
+    to: "on"
+    trigger: state
+  - entity_id:
+      - light.basement
+      - light.hue_color_lamp_4
+    trigger: state
+  - entity_id: input_boolean.basement_override
+    to: "on"
+    trigger: state
+  - entity_id: input_boolean.basement_override
+    to: "off"
+    trigger: state
+conditions:
+  - condition: template
+    value_template: |
+      {{ not is_state('input_boolean.basement_override', 'on') or 
+         trigger.entity_id == 'input_boolean.basement_override' }}
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >-
+              {{ trigger.entity_id ==
+              'binary_sensor.b_slave_tz3000_ts0202_motion' }}
+          - condition: state
+            entity_id: input_boolean.basement_override
+            state: "off"
+        sequence:
+          - target:
+              area_id: basement
+              entity_id:
+                - light.basement
+                - light.hue_color_lamp_4
+            action: light.turn_on
+            data: {}
+          - wait_for_trigger:
+              entity_id: binary_sensor.b_slave_tz3000_ts0202_motion
+              to: "off"
+              trigger: state
+          - delay:
+              seconds: 300
+          - condition: state
+            entity_id: input_boolean.basement_override
+            state: "off"
+          - target:
+              area_id: basement
+              entity_id:
+                - light.basement
+                - light.hue_color_lamp_4
+            action: light.turn_off
+            data: {}
+      - conditions:
+          - condition: template
+            value_template: >-
+              {{ trigger.entity_id in ['light.basement',
+              'light.hue_color_lamp_4'] }}
+          - condition: template
+            value_template: "{{ light_was_manually_controlled }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.to_state.state == 'on' }}"
+                sequence:
+                  - target:
+                      entity_id: input_boolean.basement_override
+                    action: input_boolean.turn_on
+                    data: {}
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.to_state.state == 'off' }}"
+                sequence:
+                  - target:
+                      entity_id: input_boolean.basement_override
+                    action: input_boolean.turn_off
+                    data: {}
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ trigger.entity_id == 'input_boolean.basement_override' 
+                 and trigger.to_state.state == 'on' }}
+        sequence:
+          - target:
+              area_id: basement
+              entity_id:
+                - light.basement
+                - light.hue_color_lamp_4
+            action: light.turn_on
+            data: {}
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ trigger.entity_id == 'input_boolean.basement_override' 
+                 and trigger.to_state.state == 'off' }}
+        sequence:
+          - target:
+              area_id: basement
+              entity_id:
+                - light.basement
+                - light.hue_color_lamp_4
+            action: light.turn_off
+            data: {}
+variables:
+  light_was_manually_controlled: >
+    {% set last_motion =
+    states.binary_sensor.b_slave_tz3000_ts0202_motion.last_changed %} {% set
+    last_automation =
+    states.automation.basement_motion_sensor_with_wall_switch_override.last_triggered
+    %} {% set time_diff = (as_timestamp(now()) - as_timestamp(last_automation))
+    | int %} {{ time_diff > 2 }}
